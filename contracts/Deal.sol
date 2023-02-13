@@ -17,6 +17,21 @@ contract Deal is Base {
         DEAL_STATUS status
     );
 
+    event CancelDeal(
+        bytes32 dealId,
+        address seller,
+        address buyer,
+        uint256 amount0Total,
+        uint256 amount1Total,
+        uint256 amount0,
+        uint256 amount1,
+        address token0,
+        address token1,
+        uint256 createdTime,
+        uint256 expireTime,
+        DEAL_STATUS status
+    );
+
     event CreatePair(bytes32 pair, address token0, address token1);
 
     struct Token {
@@ -36,6 +51,7 @@ contract Deal is Base {
     mapping(bytes32 => Deal) private mapDeal;
     mapping(address => uint256) private dealOwnerCount;
     mapping(address => Deal[]) private mapDealToSeller;
+    mapping(bytes32 => address) private mapOwnerDeal;
 
     function _createPair(address tokenA, address tokenB) private {
         require(tokenA != tokenB, "token not same address!");
@@ -88,14 +104,19 @@ contract Deal is Base {
     function deposit(
         IERC20 token,
         address _sender,
-        address _reciver,
-        uint256 _amount0
+        uint256 _amount
     ) public payable {
-        require(
-            token.allowance(msg.sender, address(this)) >= _amount0,
-            "Error"
-        );
-        token.transferFrom(msg.sender, address(this), _amount0);
+        require(token.allowance(_sender, address(this)) >= _amount, "Error");
+        token.transferFrom(_sender, address(this), _amount);
+    }
+
+    function withdraw(
+        IERC20 token,
+        address _receiver,
+        uint256 _amount
+    ) public payable {
+        require(token.balanceOf(address(this)) >= _amount, "Error");
+        token.transfer(_receiver, _amount);
     }
 
     function createDeal(
@@ -104,20 +125,27 @@ contract Deal is Base {
         uint256 amount1,
         uint256 expireTime
     ) public payable {
-        // requied pair exists
         require(mapPair[pair].pair == pair, "pair not exit");
         PairInfo memory pairData = mapPair[pair];
 
         IERC20 tokenA = IERC20(pairData.token0);
         require(amount0 < tokenA.balanceOf(msg.sender), "invalid amount");
-
-        // require(
-        //     tokenA.allowance(msg.sender, address(this)) >= amount0,
-        //     "Error"
-        // );
-        // tokenA.transferFrom(msg.sender, address(this), amount0);
-        deposit(tokenA, msg.sender, address(this), amount0);
+        require(
+            tokenA.allowance(msg.sender, address(this)) >= amount0,
+            "Error"
+        );
         require(expireTime > block.timestamp, "invalid time");
+        _createDeal(pair, amount0, amount1, expireTime);
+        deposit(tokenA, msg.sender, amount0);
+    }
+
+    function _createDeal(
+        bytes32 pair,
+        uint256 amount0,
+        uint256 amount1,
+        uint256 expireTime
+    ) private {
+        PairInfo memory pairData = mapPair[pair];
 
         bytes32 _dealId = createDealId();
 
@@ -137,7 +165,7 @@ contract Deal is Base {
 
         dealOwnerCount[msg.sender]++;
         mapDealToSeller[msg.sender].push(deal);
-
+        mapOwnerDeal[_dealId] = msg.sender;
         emit CreateDeal(
             deal.dealId,
             deal.seller,
@@ -154,7 +182,39 @@ contract Deal is Base {
         );
     }
 
+    function cancelDeal(bytes32 _dealId) public payable {
+        _cancelDeal(_dealId);
+    }
+
+    function _cancelDeal(bytes32 _dealId) private {
+        require(mapDeal[_dealId].dealId == _dealId, "Deal not exists");
+        Deal storage deal = mapDeal[_dealId];
+        require(deal.seller == msg.sender, "not owner");
+        deal.status = DEAL_STATUS.CANCEL;
+        deal.expireTime = 0;
+        emit CancelDeal(
+            deal.dealId,
+            deal.seller,
+            deal.buyer,
+            deal.amount0Total,
+            deal.amount1Total,
+            deal.amount0,
+            deal.amount1,
+            deal.token0,
+            deal.token1,
+            deal.createdTime,
+            deal.expireTime,
+            deal.status
+        );
+        IERC20 token0 = IERC20(deal.token0);
+        withdraw(token0, msg.sender, deal.amount0);
+    }
+
     function getDealActive(address _owner) public view returns (Deal[] memory) {
         return mapDealToSeller[_owner];
+    }
+
+    function getDeal(bytes32 _dealId) public view returns (Deal memory) {
+        return mapDeal[_dealId];
     }
 }

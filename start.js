@@ -69,57 +69,61 @@ async function start() {
 
   console.log({ token0Symbol });
   const token0 = getContract(token0Symbol);
-  //   const balance = await k1Token.methods
-  //     .balanceOf("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
-  //     .call();
-  //   console.log({ balance });
 
   const balanceDealContract = await token0.methods
     .balanceOf(contractAddress.Deal)
     .call();
   console.log("xxxx ", { balanceDealContract });
 
-  const { pair } = pairData;
-  const amount0 = toWei(99).toString();
-  const amount1 = toWei(2000).toString();
-  const expireTime = new Date().getTime() + 3600;
+  // const { pair } = pairData;
+  // const amount0 = toWei(99).toString();
+  // const amount1 = toWei(2000).toString();
+  // const expireTime = new Date().getTime() + 3600;
 
-  // approve
-  await sendFunc(privateKey, token0, contractAddress[token0Symbol], "approve", [
-    contractAddress.Deal,
-    amount0,
-  ]);
+  // await sendFunc(privateKey, token0, contractAddress[token0Symbol], "approve", [
+  //   contractAddress.Deal,
+  //   amount0,
+  // ]);
 
-  //   await sendFunc(privateKey, k1Contract, contractAddress.K1Token, "transfer", [
-  //     contractAddress.Deal,
-  //     amount0,
-  //   ]);
 
   const sender = (await privateKeyToAccount(privateKey)).address;
 
-  const allowance = await callFunc(token0, `allowance`, [
-    sender,
-    contractAddress.Deal,
-  ]);
-  // approve
-  console.log({ allowance });
+  // const allowance = await callFunc(token0, `allowance`, [
+  //   sender,
+  //   contractAddress.Deal,
+  // ]);
+  // // approve
+  // console.log({ allowance });
 
-  const paramDeal = [pair, amount0, amount1, expireTime];
-  await sendFunc(
-    privateKey,
-    DealContract,
-    contractAddress.Deal,
-    "createDeal",
-    paramDeal
-  );
+  // const paramDeal = [pair, amount0, amount1, expireTime];
+  // await sendFunc(
+  //   privateKey,
+  //   DealContract,
+  //   contractAddress.Deal,
+  //   "createDeal",
+  //   paramDeal
+  // );
 
   const deals = await callFunc(DealContract, "getDealActive", [sender]);
   console.log({ deals });
 
+  const deal1= await callFunc(DealContract, "getDeal", [ deals[0].dealId]);
+
+  console.log({deal1});
+
+  await sendFunc(privateKey, DealContract, contractAddress.Deal, "cancelDeal", [
+    deals[0].dealId,
+  ]);
+
+
+  const dealCalcel= await callFunc(DealContract, "getDeal", [ deals[0].dealId]);
+
+  console.log({dealCalcel});
+  
   const balanceDealContract222 = await token0.methods
     .balanceOf(contractAddress.Deal)
     .call();
-  console.log("xxxx ", { balanceDealContract222 });  
+  console.log("xxxx ", { balanceDealContract222 });
 }
 
 start();
