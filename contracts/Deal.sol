@@ -260,7 +260,7 @@ contract Deal is Base {
     function getAllDeal() public view returns (Deal[] memory) {
         Deal[] memory deals = new Deal[](dealCount);
         uint256 index = 0;
-        for (uint256 i = 0; i <= dealCount; i++) {
+        for (uint256 i = 0; i < dealCount; i++) {
             bytes32 _dealId = mapIndexDeal[i];
 
             deals[index] = mapDeal[_dealId];

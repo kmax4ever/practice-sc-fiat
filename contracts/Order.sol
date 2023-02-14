@@ -54,7 +54,7 @@ contract Order is Base {
     }
 
     function createPair(address _tokenA, address _tokenB) public onlyAdmin {
-        (address token0, address token1) = (_tokenA > _tokenB)
+        (address token0, address token1) = _tokenA < _tokenB
             ? (_tokenA, _tokenB)
             : (_tokenB, _tokenA);
 
@@ -79,7 +79,10 @@ contract Order is Base {
             ? (tokenA, tokenB)
             : (tokenB, tokenA);
 
-        return Pair(mapTokensToPair[token0][token1], token0, token1);
+        bytes32 _pairId = mapTokensToPair[token0][token1];
+        Pair memory pair = mapPair[_pairId];
+
+        return pair;
     }
 
     function createOrder(
@@ -100,12 +103,12 @@ contract Order is Base {
         Pair memory pair = mapPair[_pair];
         require(pair.pair == _pair, "Pair not found!");
 
-        // require(
-        //     IERC20(pair.token0).allowance(msg.sender, address(this)) >= _amount,
-        //     "Error"
-        // );
+        require(
+            IERC20(pair.token0).allowance(msg.sender, address(this)) >= _amount,
+            "Error"
+        );
         require(_price > 0, "Invalid price");
-        //lock(pair.token0, _amount);
+        lock(pair.token0, _amount);
         bytes32 _orderId = _createOrderId();
         mapIndexOrder[_orderCount] = _orderId;
         orderCountByType[_orderType]++;
@@ -140,21 +143,39 @@ contract Order is Base {
         );
     }
 
+    // function getOrdersByType(bool _isSellOrder)
+    //     public
+    //     view
+    //     returns (Order[] memory)
+    // {
+    //     ORDER_TYPE _orderType = _isSellOrder ? ORDER_TYPE.SELL : ORDER_TYPE.BUY;
+    //     Order[] memory orders = new Order[](orderCountByType[_orderType]);
+    //     uint32 index = 0;
+    //     for (uint256 i = 1; i <= _orderCount; i++) {
+    //         // init i=1 because _orderCount fisrt create _orderCount++ =1
+    //         bytes32 _orderId = mapIndexOrder[i];
+    //         if (mapOrder[_orderId].orderType == _orderType) {
+    //             orders[index] = mapOrder[_orderId];
+    //             index++;
+    //         }
+    //     }
+    //     return orders;
+    // }
+
     function getOrdersByType(ORDER_TYPE _orderType)
         public
         view
         returns (Order[] memory)
     {
-        uint256 _count = orderCountByType[_orderType];
-        Order[] memory orders = new Order[](_count);
+        Order[] memory orders = new Order[](orderCountByType[_orderType]);
         uint32 index = 0;
-        for (uint256 i = 0; i <= _orderCount; i++) {
+        for (uint256 i = 1; i <= _orderCount; i++) {
+            // init i=1 because _orderCount fisrt create _orderCount++ =1
             bytes32 _orderId = mapIndexOrder[i];
-            Order memory order = mapOrder[_orderId];
-            // if (order.orderType == _orderType) {
-            orders[index] = order;
-            index++;
-            // }
+            if (mapOrder[_orderId].orderType == _orderType) {
+                orders[index] = mapOrder[_orderId];
+                index++;
+            }
         }
         return orders;
     }

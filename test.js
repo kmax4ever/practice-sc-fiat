@@ -15,7 +15,8 @@ const privateSeller =
 
 const privateBuyer =
   "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
-
+let token0Symbol = "";
+let token1Symbol = "";
 const contractAddress = require("./contractAdress.json");
 const AbiJson = require("./ABI.json");
 var CONTRACT = {};
@@ -95,15 +96,15 @@ async function createOrder(token0Symbol, pairData) {
     token0,
     contractAddress[token0Symbol],
     "approve",
-    [contractAddress.Order, amount0]
+    [contractAddress.Order, "99999999999999999999"]
   );
 
-  const allowance = await callFunc(token0, `allowance`, [
+  const currentAllowanceContract = await callFunc(token0, `allowance`, [
     seller,
     contractAddress.Order,
   ]);
   // approve
-  console.log({ allowance });
+  console.log({ currentAllowanceContract });
 
   const paramDeal = [pair, "0", amount0, price];
 
@@ -127,7 +128,7 @@ async function fillDeal(_dealId, token1Symbol, _amount0) {
     token1,
     contractAddress[token1Symbol],
     "approve",
-    [contractAddress.Deal, "99999999999999999999999"]
+    [contractAddress.Deal, "9999999999999999999"]
   );
 
   const allowance = await callFunc(token1, `allowance`, [
@@ -158,8 +159,7 @@ async function start() {
 
   //   const pairs = await getAllPairs([]);
   //   console.log({ pairs });
-  let token0Symbol = "";
-  let token1Symbol = "";
+
   for (const key in contractAddress) {
     if (pairData.token0.toLowerCase() === contractAddress[key].toLowerCase()) {
       token0Symbol = key;
@@ -171,21 +171,23 @@ async function start() {
 
   console.log({ token0Symbol, token1Symbol });
 
-  await createOrder(token0Symbol, pairData);
+await createOrder(token0Symbol, pairData);
 
-  const events = await OrderContract.getPastEvents("CreateOrder");
-  console.log({ events });
-  // const orders = await callFunc(OrderContract, "getOrdersByType", ["0"]);
-  // console.log({ orders });
+//   const events = await OrderContract.getPastEvents("CreateOrder");
+//   console.log({ events: events[0].returnValues });
+
+
+  const orders = await callFunc(OrderContract, "getOrdersByType", [0]);
+  console.log({ orders });
 
   // await sendFunc(privateKey, OrderContract, contractAddress.Deal, "cancelDeal", [
   //   deals[0].dealId,
   // ]);
 
-  // const balanceOrderContract222 = await token0.methods
-  //   .balanceOf(contractAddress.Deal)
-  //   .call();
-  // console.log("xxxx ", { balanceOrderContract222 });
+  const balanceOrderContract = await getContract(token0Symbol)
+    .methods.balanceOf(contractAddress.Order)
+    .call();
+  console.log("xxxx ", { balanceOrderContract });
 
   // const ethBalance = await web3Default.eth.getBalance(contractAddress.Deal);
   // console.log({ ethBalance: fromWei(ethBalance) });
