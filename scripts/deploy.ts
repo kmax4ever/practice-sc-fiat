@@ -36,10 +36,12 @@ async function main() {
   };
 
   await getABIS();
+  //await CONTRACT["Deal"].createPair(contractAddress[`K1Token`],contractAddress[`USDT`]);
 
-  await CONTRACT["Deal"].createPair(contractAddress[`K1Token`],contractAddress[`USDT`]);
-
-
+  await CONTRACT["Order"].createPair(
+    contractAddress[`K1Token`],
+    contractAddress[`USDT`]
+  );
   await fs.writeFileSync(
     "contractAdress.json",
     JSON.stringify(contractAddress, null, 4)

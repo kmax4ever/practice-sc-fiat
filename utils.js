@@ -199,7 +199,6 @@ const convertNumber = (value, decimal) => {
 };
 
 const fromWei = (value) => {
-  console.log({ value });
   try {
     return ethers.utils.formatUnits(value.toString(), "ether");
   } catch (error) {

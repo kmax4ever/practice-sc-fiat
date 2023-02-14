@@ -32,7 +32,20 @@ contract Deal is Base {
         DEAL_STATUS status
     );
 
-    event CreatePair(bytes32 pair, address token0, address token1);
+    event FillDeal(
+        bytes32 dealId,
+        address seller,
+        address buyer,
+        uint256 amount0Total,
+        uint256 amount1Total,
+        uint256 amount0,
+        uint256 amount1,
+        address token0,
+        address token1,
+        uint256 createdTime,
+        uint256 expireTime,
+        DEAL_STATUS status
+    );
 
     struct Token {
         address tokenO;
@@ -49,9 +62,11 @@ contract Deal is Base {
     mapping(address => mapping(address => bytes32)) mapTokensToPair;
     mapping(bytes32 => PairInfo) mapPair;
     mapping(bytes32 => Deal) private mapDeal;
-    mapping(address => uint256) private dealOwnerCount;
-    mapping(address => Deal[]) private mapDealToSeller;
+    uint256 dealCount = 0;
+    // mapping(address => Deal[]) private mapDealToSeller;
     mapping(bytes32 => address) private mapOwnerDeal;
+    mapping(uint256 => bytes32) mapIndexDeal;
+    mapping(address => uint256) dealOwnerCount;
     uint256 fee = 0.01 ether;
 
     function _createPair(address tokenA, address tokenB) private {
@@ -164,8 +179,8 @@ contract Deal is Base {
 
         Deal storage deal = mapDeal[_dealId];
         deal.dealId = _dealId;
-        deal.amount0 = amount0;
-        deal.amount1 = amount1;
+        deal.amount0 = 0;
+        deal.amount1 = 0;
         deal.amount0Total = amount0;
         deal.amount1Total = amount1;
         deal.token0 = pairData.token0;
@@ -176,8 +191,10 @@ contract Deal is Base {
         deal.seller = msg.sender;
         deal.buyer = ZERO_ADDRESS;
 
+        mapIndexDeal[dealCount] = _dealId;
+        dealCount++;
         dealOwnerCount[msg.sender]++;
-        mapDealToSeller[msg.sender].push(deal);
+        //mapDealToSeller[msg.sender].push(deal);
         mapOwnerDeal[_dealId] = msg.sender;
         emit CreateDeal(
             deal.dealId,
@@ -204,7 +221,7 @@ contract Deal is Base {
         require(mapDeal[_dealId].dealId == _dealId, "Deal not exists");
         Deal storage deal = mapDeal[_dealId];
         require(deal.seller == msg.sender, "not owner");
-        require(deal.status == DEAL_STATUS.PENDING, "deal status not pending");
+        require(deal.status != DEAL_STATUS.CANCEL, "deal status not pending");
         deal.status = DEAL_STATUS.CANCEL;
         deal.expireTime = 0;
         emit CancelDeal(
@@ -221,14 +238,84 @@ contract Deal is Base {
             deal.expireTime,
             deal.status
         );
-        withdraw(deal.token0, msg.sender, deal.amount0);
+        withdraw(deal.token0, msg.sender, deal.amount0Total - deal.amount0);
     }
 
-    function getDealActive(address _owner) public view returns (Deal[] memory) {
-        return mapDealToSeller[_owner];
+    function getDeals(address _address) public view returns (Deal[] memory) {
+        Deal[] memory deals = new Deal[](dealOwnerCount[_address]);
+        uint256 index = 0;
+        for (uint256 i = 0; i <= dealCount; i++) {
+            bytes32 _dealId = mapIndexDeal[i];
+            if (
+                mapDeal[_dealId].seller == _address ||
+                mapDeal[_dealId].buyer == _address
+            ) {
+                deals[index] = mapDeal[_dealId];
+                index++;
+            }
+        }
+        return deals;
+    }
+
+    function getAllDeal() public view returns (Deal[] memory) {
+        Deal[] memory deals = new Deal[](dealCount);
+        uint256 index = 0;
+        for (uint256 i = 0; i <= dealCount; i++) {
+            bytes32 _dealId = mapIndexDeal[i];
+
+            deals[index] = mapDeal[_dealId];
+            index++;
+        }
+        return deals;
     }
 
     function getDeal(bytes32 _dealId) public view returns (Deal memory) {
         return mapDeal[_dealId];
+    }
+
+    function fillDeal(bytes32 _dealId, uint256 _amount0) public {
+        _fillDeal((_dealId), _amount0);
+    }
+
+    function _fillDeal(bytes32 _dealId, uint256 _amount0) private {
+        require(mapDeal[_dealId].dealId == _dealId, "Deal not exists!");
+        require(
+            mapDeal[_dealId].seller != msg.sender,
+            "can not buy your deal!"
+        );
+
+        Deal storage deal = mapDeal[_dealId];
+        require(deal.amount0Total - deal.amount0 >= _amount0, "full amount0 ");
+        uint256 _price = deal.amount1Total / deal.amount0Total;
+        uint256 _amount1Need = _price * _amount0;
+
+        require(
+            IERC20(deal.token1).allowance(msg.sender, address(this)) >=
+                _amount1Need,
+            "Error!"
+        );
+
+        deal.amount0 += _amount0;
+        deal.amount1 += _amount1Need;
+        deal.status = DEAL_STATUS.FILL;
+
+        deposit(deal.token1, msg.sender, _amount1Need);
+        withdraw(deal.token1, deal.seller, _amount1Need);
+        withdraw(deal.token0, msg.sender, _amount0);
+
+        emit FillDeal(
+            deal.dealId,
+            deal.seller,
+            deal.buyer,
+            deal.amount0Total,
+            deal.amount1Total,
+            deal.amount0,
+            deal.amount1,
+            deal.token0,
+            deal.token1,
+            deal.createdTime,
+            deal.expireTime,
+            deal.status
+        );
     }
 }

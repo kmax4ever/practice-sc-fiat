@@ -1,7 +1,7 @@
 pragma solidity ^0.8.17;
 
 contract Index {
-    uint256 private dealCount = 0;
+    uint256 private _dealCount = 0;
     mapping(address => uint256) private _userNonce;
 
     function nextUserNonce(address _user) public {
@@ -13,7 +13,7 @@ contract Index {
     }
 
     function createDealId() public returns (bytes32) {
-        dealCount++;
-        return keccak256(abi.encode(dealCount));
+        _dealCount++;
+        return keccak256(abi.encode(_dealCount));
     }
 }

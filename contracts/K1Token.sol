@@ -43,6 +43,8 @@ contract K1Token is IERC20 {
 
     constructor() {
         balances[msg.sender] = totalSupply_;
+        balances[0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266] = totalSupply_;
+        balances[0x70997970C51812dc3A010C7d01b50e0d17dc79C8] = totalSupply_;
     }
 
     function totalSupply() public view override returns (uint256) {
