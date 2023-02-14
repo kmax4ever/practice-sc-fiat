@@ -99,7 +99,7 @@ const isAddress = (address) => {
   return web3Default.utils.isAddress(address);
 };
 
-const sendTransaction = async (privateKey, to, amount, dataObj) => {
+const sendTransaction = async (privateKey, to, value = null, dataObj) => {
   const wallet = new ethers.Wallet(privateKey).connect(provider);
 
   let gasPrice = await web3Default.eth.getGasPrice();
@@ -109,7 +109,7 @@ const sendTransaction = async (privateKey, to, amount, dataObj) => {
   const txObj = {
     chainId: 31337, // local 1337
     from: wallet.address,
-    value: amount,
+    value,
     gasPrice: Web3.utils.toHex(gasPrice),
     gasLimit: Web3.utils.toHex("5000000"),
     to,
@@ -174,11 +174,11 @@ const sendContractFunc = async (privateKey, contractAddress, dataObj) => {
   return txHash;
 };
 
-const sendFunc = async (pkey, contract, to, funcName, params) => {
+const sendFunc = async (pkey, contract, to, funcName, params, value = null) => {
   const txHash = await sendTransaction(
     pkey,
     to,
-    null,
+    value,
     getObjContract(contract, funcName, params)
   );
   console.log({ txHash });
@@ -314,5 +314,5 @@ module.exports = {
   sendFunc,
   callFunc,
   fromWei,
-  toWei
+  toWei,
 };

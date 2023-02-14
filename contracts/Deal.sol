@@ -52,6 +52,7 @@ contract Deal is Base {
     mapping(address => uint256) private dealOwnerCount;
     mapping(address => Deal[]) private mapDealToSeller;
     mapping(bytes32 => address) private mapOwnerDeal;
+    uint256 fee = 0.01 ether;
 
     function _createPair(address tokenA, address tokenB) private {
         require(tokenA != tokenB, "token not same address!");
@@ -71,6 +72,10 @@ contract Deal is Base {
 
     function createPair(address _tokenA, address _tokenB) public {
         _createPair(_tokenA, _tokenB);
+    }
+
+    function setFee(uint256 _newFee) public {
+        fee = _newFee;
     }
 
     // function _sort(address _tokenA, address _tokenB)
@@ -102,21 +107,24 @@ contract Deal is Base {
     }
 
     function deposit(
-        IERC20 token,
+        address token,
         address _sender,
         uint256 _amount
     ) public payable {
-        require(token.allowance(_sender, address(this)) >= _amount, "Error");
-        token.transferFrom(_sender, address(this), _amount);
+        require(
+            IERC20(token).allowance(_sender, address(this)) >= _amount,
+            "Error"
+        );
+        IERC20(token).transferFrom(_sender, address(this), _amount);
     }
 
     function withdraw(
-        IERC20 token,
+        address token,
         address _receiver,
         uint256 _amount
     ) public payable {
-        require(token.balanceOf(address(this)) >= _amount, "Error");
-        token.transfer(_receiver, _amount);
+        require(IERC20(token).balanceOf(address(this)) >= _amount, "Error");
+        IERC20(token).transfer(_receiver, _amount);
     }
 
     function createDeal(
@@ -128,15 +136,20 @@ contract Deal is Base {
         require(mapPair[pair].pair == pair, "pair not exit");
         PairInfo memory pairData = mapPair[pair];
 
-        IERC20 tokenA = IERC20(pairData.token0);
-        require(amount0 < tokenA.balanceOf(msg.sender), "invalid amount");
+        //IERC20 tokenA = IERC20(pairData.token0);
         require(
-            tokenA.allowance(msg.sender, address(this)) >= amount0,
+            amount0 < IERC20(pairData.token0).balanceOf(msg.sender),
+            "invalid amount"
+        );
+        require(
+            IERC20(pairData.token0).allowance(msg.sender, address(this)) >=
+                amount0,
             "Error"
         );
         require(expireTime > block.timestamp, "invalid time");
+        require(msg.value >= fee, "fee < vallue");
         _createDeal(pair, amount0, amount1, expireTime);
-        deposit(tokenA, msg.sender, amount0);
+        deposit(pairData.token0, msg.sender, amount0);
     }
 
     function _createDeal(
@@ -184,12 +197,14 @@ contract Deal is Base {
 
     function cancelDeal(bytes32 _dealId) public payable {
         _cancelDeal(_dealId);
+        payable(msg.sender).transfer(fee); //send ether to msg.sender
     }
 
     function _cancelDeal(bytes32 _dealId) private {
         require(mapDeal[_dealId].dealId == _dealId, "Deal not exists");
         Deal storage deal = mapDeal[_dealId];
         require(deal.seller == msg.sender, "not owner");
+        require(deal.status == DEAL_STATUS.PENDING, "deal status not pending");
         deal.status = DEAL_STATUS.CANCEL;
         deal.expireTime = 0;
         emit CancelDeal(
@@ -206,8 +221,7 @@ contract Deal is Base {
             deal.expireTime,
             deal.status
         );
-        IERC20 token0 = IERC20(deal.token0);
-        withdraw(token0, msg.sender, deal.amount0);
+        withdraw(deal.token0, msg.sender, deal.amount0);
     }
 
     function getDealActive(address _owner) public view returns (Deal[] memory) {

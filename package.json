@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node start.js",
+    "start": "node test.js",
     "local-deploy": "npx hardhat run scripts/deploy.ts --network localhost"
   },
   "author": "",
