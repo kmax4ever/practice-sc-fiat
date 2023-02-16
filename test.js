@@ -79,7 +79,7 @@ async function getBalanceAll() {
   });
 }
 
-async function createOrder(token0Symbol, pairData) {
+async function createOrder(pairData, isBuy = true) {
   const token0 = getContract(token0Symbol);
   const balanceOrderContract = await token0.methods
     .balanceOf(contractAddress.Order)
@@ -87,31 +87,47 @@ async function createOrder(token0Symbol, pairData) {
   console.log("xxxx ", { balanceOrderContract });
 
   const { pair } = pairData;
-  const amount0 = toWei(9).toString();
+  const amount0 = toWei(9999).toString();
   const fee = toWei(0.01).toString();
-  const price = toWei(0.01).toString();
+  const price = toWei(1).toString();
 
   await sendFunc(
-    privateSeller,
+    isBuy ? privateBuyer : privateSeller,
     token0,
     contractAddress[token0Symbol],
     "approve",
-    [contractAddress.Order, "99999999999999999999"]
+    [contractAddress.Order, "9999999999999999999999999999999999"]
+  );
+
+  await sendFunc(
+    isBuy ? privateBuyer : privateSeller,
+    getContract(token1Symbol),
+    contractAddress[token1Symbol],
+    "approve",
+    [contractAddress.Order, "9999999999999999999999999999999999"]
   );
 
   const currentAllowanceContract = await callFunc(token0, `allowance`, [
-    seller,
+    isBuy ? buyer : seller,
     contractAddress.Order,
   ]);
   // approve
   console.log({ currentAllowanceContract });
 
-  const paramDeal = [pair, "0", amount0, price];
+  const currentAllowanceContract2 = await callFunc(
+    getContract(token1Symbol),
+    `allowance`,
+    [isBuy ? buyer : seller, contractAddress.Order]
+  );
+  // approve
+  console.log({ currentAllowanceContract2 });
+
+  const paramDeal = [pair, isBuy ? "0" : "1", amount0, price];
 
   console.log({ paramDeal });
   console.log("xxx create order");
   await sendFunc(
-    privateSeller,
+    isBuy ? privateBuyer : privateSeller,
     OrderContract,
     contractAddress.Order,
     "createOrder",
@@ -171,23 +187,30 @@ async function start() {
 
   console.log({ token0Symbol, token1Symbol });
 
-await createOrder(token0Symbol, pairData);
+  let orders = await callFunc(OrderContract, "getOrders", []);
+  if (orders.length == 0) {
+    await createOrder(pairData, true);
+    await createOrder(pairData, false);
+  }
 
-//   const events = await OrderContract.getPastEvents("CreateOrder");
-//   console.log({ events: events[0].returnValues });
-
-
-  const orders = await callFunc(OrderContract, "getOrdersByType", [0]);
+  orders = await callFunc(OrderContract, "getOrders", []);
   console.log({ orders });
+
+  // const matchOrder = await callFunc(OrderContract, "findMatchOrder", [
+  //   "1",
+  //   orders[0].price,
+  // ]);
+
+  // console.log({ matchOrder });
 
   // await sendFunc(privateKey, OrderContract, contractAddress.Deal, "cancelDeal", [
   //   deals[0].dealId,
   // ]);
 
-  const balanceOrderContract = await getContract(token0Symbol)
-    .methods.balanceOf(contractAddress.Order)
-    .call();
-  console.log("xxxx ", { balanceOrderContract });
+  // const balanceOrderContract = await getContract(token0Symbol)
+  //   .methods.balanceOf(contractAddress.Order)
+  //   .call();
+  // console.log("xxxx ", { balanceOrderContract });
 
   // const ethBalance = await web3Default.eth.getBalance(contractAddress.Deal);
   // console.log({ ethBalance: fromWei(ethBalance) });

@@ -26,8 +26,9 @@ contract Struct {
 
     struct Order {
         bytes32 orderId;
-        address seller;
+        address owner;
         uint256 amount0Total;
+        uint256 amount1Total;
         uint256 amount0;
         uint256 amount1;
         uint256 price;
