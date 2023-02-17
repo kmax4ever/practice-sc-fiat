@@ -263,7 +263,6 @@ contract Order is Base {
             Order storage _orderMatch = mapOrder[_orderIdMatch];
 
             console.log("xxx _price", _price);
-            console.log("findType", string(abi.encodePacked(_findType)));
             //   console.log("_orderMatch", _orderMatch);
             require(
                 currentOrder.orderId != _orderMatch.orderId,
@@ -273,44 +272,53 @@ contract Order is Base {
             uint256 _amount1;
 
             if (isBuyOrder) {
-                bool _cond = (currentOrder.amount0Total -
-                    currentOrder.amount0 *
-                    _price >
-                    _orderMatch.amount1Total - _orderMatch.amount1);
+                uint256 _amount0Exists = currentOrder.amount0Total -
+                    currentOrder.amount0;
+                uint256 _amount1Exists = _orderMatch.amount1Total -
+                    _orderMatch.amount1;
 
-                _amount1 = (_cond)
-                    ? _orderMatch.amount1Total - _orderMatch.amount1
-                    : currentOrder.amount0Total -
-                        currentOrder.amount0 *
-                        _price -
-                        _orderMatch.amount1Total -
-                        _orderMatch.amount1;
+                _amount1 = (_amount0Exists * _price > _amount1Exists)
+                    ? _amount1Exists
+                    : _amount0Exists * _price - _amount1Exists;
 
                 _amount0 = _amount1 / _price;
+
+                console.log("_amount0Exists", _amount0Exists);
+
+                console.log("_amount1Exists", _amount1Exists);
+                console.log(
+                    "currentOrder.amount1Total",
+                    currentOrder.amount1Total
+                );
+                console.log("_amount0", _amount0);
+                console.log("_amount1", _amount1);
 
                 require(
                     currentOrder.amount0Total - currentOrder.amount0 > _amount0,
                     "invalid _amount0"
                 );
             } else {
-                bool _cond = currentOrder.amount1Total / _price >
-                    _orderMatch.amount0Total - _orderMatch.amount0;
+                uint256 _amount0Exists = _orderMatch.amount0Total -
+                    _orderMatch.amount0;
+                uint256 _amount1Exists = currentOrder.amount1Total -
+                    currentOrder.amount1;
 
-                _amount0 = (_cond)
-                    ? _orderMatch.amount0Total - _orderMatch.amount0
-                    : _orderMatch.amount0Total -
-                        _orderMatch.amount0 -
-                        currentOrder.amount1Total /
-                        _price;
+                _amount0 = (_amount1Exists / _price > _amount0Exists)
+                    ? _amount0Exists
+                    : _amount0Exists - (_amount1Exists / _price);
 
                 _amount1 = _amount0 * _price;
 
+                console.log("_amount0Exists", _amount0Exists);
+
+                console.log("_amount1Exists", _amount1Exists);
                 console.log(
                     "currentOrder.amount1Total",
                     currentOrder.amount1Total
                 );
+                console.log("_amount0", _amount0);
                 console.log("_amount1", _amount1);
-                
+
                 require(
                     currentOrder.amount1Total >= _amount1,
                     "invalid _amount1"
