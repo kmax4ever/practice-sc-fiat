@@ -4,7 +4,8 @@ contract Struct {
     enum DEAL_STATUS {
         PENDING,
         FILL,
-        CANCEL
+        CANCEL,
+        DONE
     }
 
     address constant ZERO_ADDRESS = address(0x0);

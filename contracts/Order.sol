@@ -268,6 +268,17 @@ contract Order is Base {
                 currentOrder.orderId != _orderMatch.orderId,
                 "Error orderId"
             );
+
+            if (
+                (_findType == ORDER_TYPE.BUY &&
+                    _orderMatch.amount0Total == _orderMatch.amount0) ||
+                (_findType == ORDER_TYPE.SELL &&
+                    _orderMatch.amount1Total == _orderMatch.amount1)
+            ) {
+                console.log("order full fill, return.");
+                continue;
+            }
+
             uint256 _amount0;
             uint256 _amount1;
 
@@ -276,13 +287,17 @@ contract Order is Base {
                     currentOrder.amount0;
                 uint256 _amount1Exists = _orderMatch.amount1Total -
                     _orderMatch.amount1;
+                uint256 _amount1Need = _amount0Exists * _price;
 
-                _amount1 = (_amount0Exists * _price > _amount1Exists)
+                _amount1 = (_amount1Need > _amount1Exists)
                     ? _amount1Exists
-                    : _amount0Exists * _price - _amount1Exists;
+                    : (_amount1Need == _amount1Exists)
+                    ? _amount1Exists
+                    : (_amount1Need);
 
                 _amount0 = _amount1 / _price;
 
+                console.log("_amount1Need", _amount1Need);
                 console.log("_amount0Exists", _amount0Exists);
 
                 console.log("_amount1Exists", _amount1Exists);
@@ -294,7 +309,8 @@ contract Order is Base {
                 console.log("_amount1", _amount1);
 
                 require(
-                    currentOrder.amount0Total - currentOrder.amount0 > _amount0,
+                    currentOrder.amount0Total - currentOrder.amount0 >=
+                        _amount0,
                     "invalid _amount0"
                 );
             } else {
@@ -303,12 +319,16 @@ contract Order is Base {
                 uint256 _amount1Exists = currentOrder.amount1Total -
                     currentOrder.amount1;
 
-                _amount0 = (_amount1Exists / _price > _amount0Exists)
+                uint256 _amount0Need = _amount1Exists / _price;
+
+                _amount0 = (_amount0Need > _amount0Exists)
                     ? _amount0Exists
-                    : _amount0Exists - (_amount1Exists / _price);
+                    : _amount0Exists == _amount0Need
+                    ? _amount0Exists
+                    : _amount0Need;
 
                 _amount1 = _amount0 * _price;
-
+                console.log("_amount0Need", _amount0Exists);
                 console.log("_amount0Exists", _amount0Exists);
 
                 console.log("_amount1Exists", _amount1Exists);
