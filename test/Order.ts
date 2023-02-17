@@ -24,16 +24,24 @@ describe("Order Contract", function () {
     await usdt.approve(order.address, toWei("99999999999999999999"));
 
     const _orderType = "0";
-    const _amount = toWei("10000");
-    const _price = "2"
+    const _amount = toWei("88888");
+    const _price = "2";
     const _pair = pairData.pair;
 
     await order.createOrder(_pair, "0", _amount, _price);
-    await order.createOrder(_pair, "1", toWei("10000"), _price);
-    await order.createOrder(_pair, "1", toWei("10000"), _price);
-    await order.createOrder(_pair, "1", toWei("10000"), _price);
-    const orders = await order.getOrders();
-    console.log(orders);
+    await order.createOrder(_pair, "1", toWei("1111"), _price);
+    await order.createOrder(_pair, "1", toWei("222"), _price);
+    let orders = await order.getOrders();
+    const _orderId = orders[0].orderId;
+    console.log("xxx orderId", _orderId);
+
+    //await order.cancelOrder(_orderId);
+
+    // orders = await order.getOrders();
+    // console.log(orders);
+
+    const matchs = await order.getMatchs();
+    console.log({ matchs });
 
     const [balance1, balance2] = await Promise.all([
       k1Token.balanceOf(order.address),

@@ -17,6 +17,9 @@ contract Order is Base {
     mapping(ORDER_TYPE => uint256) countOrderByType;
     mapping(ORDER_TYPE => mapping(uint256 => bytes32)) mapIndexOrderByTypeAndPrice;
 
+    uint256 matchCount;
+    mapping(uint256 => MatchOrder) mapMatchOrder;
+
     constructor() {
         _admin = msg.sender;
     }
@@ -192,6 +195,10 @@ contract Order is Base {
         return orders;
     }
 
+    function getOrdersSort() public view returns(Order [] memory) {
+        
+    }
+
     function updateOrder(
         bytes32 _orderId,
         uint256 _price,
@@ -210,6 +217,12 @@ contract Order is Base {
         require(mapOrder[_orderId].orderId == _orderId, "order not found!");
         Order storage _order = mapOrder[_orderId];
         require(_order.status != ORDER_STATUS.CANCEL, "order status invalid");
+
+        if (_order.orderType == ORDER_TYPE.BUY) {
+            require(_order.amount0Total > _order.amount0, " order full fill");
+        } else {
+            require(_order.amount1Total > _order.amount1, " order full fill");
+        }
 
         bool cond = _order.orderType == ORDER_TYPE.BUY;
 
@@ -243,7 +256,14 @@ contract Order is Base {
         );
     }
 
+    function getOrderById(bytes32 _orderId) public view returns (Order memory) {
+        Order memory order = mapOrder[_orderId];
+        return order;
+    }
+
     function _handleMatchOrder(Order storage currentOrder) private {
+        console.log("************* _handleMatchOrder ************* ");
+        console.log("");
         ORDER_TYPE _findType = currentOrder.orderType == ORDER_TYPE.BUY
             ? ORDER_TYPE.SELL
             : ORDER_TYPE.BUY;
@@ -364,50 +384,78 @@ contract Order is Base {
             unlock(_orderMatch.token0, msg.sender, _amount0); //transfer buyer
             unlock(_orderMatch.token1, currentOrder.owner, _amount1); //transfer seller
 
-            // (bytes32 orderSellId, bytes32 orderBuyId) = isBuyOrder
-            //     ? (currentOrder.orderId, _orderMatch.orderId)
-            //     : (_orderMatch.orderId, currentOrder.orderId);
+            (bytes32 orderSellId, bytes32 orderBuyId) = isBuyOrder
+                ? (currentOrder.orderId, _orderMatch.orderId)
+                : (_orderMatch.orderId, currentOrder.orderId);
 
-            // (address seller, address buyer) = isBuyOrder
-            //     ? (currentOrder.owner, _orderMatch.owner)
-            //     : (_orderMatch.owner, currentOrder.owner);
+            (address seller, address buyer) = isBuyOrder
+                ? (currentOrder.owner, _orderMatch.owner)
+                : (_orderMatch.owner, currentOrder.owner);
 
-            // emit MatchOrder(
+            // emit Match(
             //     orderSellId,
             //     orderBuyId,
             //     seller,
             //     buyer,
             //     _amount0,
             //     _amount1,
-            //     _price
+            //     block.timestamp
             // );
+
+            MatchOrder storage matchOrder = mapMatchOrder[matchCount];
+            matchCount++;
+            (matchOrder.orderSellId, matchOrder.orderBuyId) = isBuyOrder
+                ? (currentOrder.orderId, _orderMatch.orderId)
+                : (_orderMatch.orderId, currentOrder.orderId);
+
+            (matchOrder.seller, matchOrder.buyer) = isBuyOrder
+                ? (currentOrder.owner, _orderMatch.owner)
+                : (_orderMatch.owner, currentOrder.owner);
+
+            (
+                matchOrder.amount0,
+                matchOrder.amount1,
+                matchOrder.price,
+                matchOrder.time
+            ) = (_amount0, _amount1, _price, block.timestamp);
         }
     }
 
-    function findMatchOrder(ORDER_TYPE _orderType, uint256 _price)
-        public
-        view
-        returns (Order[] memory)
-    {
-        ORDER_TYPE _findType = _orderType == ORDER_TYPE.BUY
-            ? ORDER_TYPE.SELL
-            : ORDER_TYPE.BUY;
+    function getMatchs() public view returns (MatchOrder[] memory) {
+        MatchOrder[] memory matchs = new MatchOrder[](matchCount);
+        uint256 index;
 
-        Order[] memory orders = new Order[](
-            countOrderByTypeAndPrice[_findType][_price]
-        );
-        uint256 index = 0;
-        for (
-            uint256 i = 0;
-            i < countOrderByTypeAndPrice[_findType][_price];
-            i++
-        ) {
-            bytes32 _orderIdMatch = mapIndexOrderByTypeAndPrice[_findType][i];
-            Order memory _orderMatch = mapOrder[_orderIdMatch];
-            orders[index] = _orderMatch;
+        for (uint256 i = 0; i < matchCount; i++) {
+            matchs[index] = mapMatchOrder[i];
             index++;
         }
-
-        return orders;
+        return matchs;
     }
+
+    // function findMatchOrder(ORDER_TYPE _orderType, uint256 _price)
+    //     public
+    //     view
+    //     returns (Order[] memory)
+    // {
+    //     ORDER_TYPE _findType = _orderType == ORDER_TYPE.BUY
+    //         ? ORDER_TYPE.SELL
+    //         : ORDER_TYPE.BUY;
+
+    //     Order[] memory orders = new Order[](
+    //         countOrderByTypeAndPrice[_findType][_price]
+    //     );
+    //     uint256 index = 0;
+    //     for (
+    //         uint256 i = 0;
+    //         i < countOrderByTypeAndPrice[_findType][_price];
+    //         i++
+    //     ) {
+    //         bytes32 _orderIdMatch = mapIndexOrderByTypeAndPrice[_findType][i];
+    //         Order memory _orderMatch = mapOrder[_orderIdMatch];
+    //         orders[index] = _orderMatch;
+    //         index++;
+    //     }
+
+    //     return orders;
+    // }
 }

@@ -56,4 +56,15 @@ contract Struct {
         BUY,
         SELL
     }
+
+    struct MatchOrder {
+        bytes32 orderSellId;
+        bytes32 orderBuyId;
+        address seller;
+        address buyer;
+        uint256 amount0;
+        uint256 amount1;
+        uint256 price;
+        uint256 time;
+    }
 }

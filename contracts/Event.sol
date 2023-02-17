@@ -33,15 +33,15 @@ contract Event is Struct {
         ORDER_TYPE orderType
     );
 
-    event MatchOrder(
+    event Match(
         bytes32 orderSellId,
         bytes32 orderBuyId,
         address seller,
         address buyer,
         uint256 amount0,
         uint256 amount1,
-        uint256 price
-
+        uint256 price,
+        uint256 time
     );
 
     event CreatePair(bytes32 pairId, address token0, address token1);
