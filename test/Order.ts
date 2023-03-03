@@ -25,20 +25,23 @@ describe("Order Contract", function () {
     await usdt.approve(order.address, toWei("99999999999999999999"));
 
     const _orderType = "0";
-    const _amount = toWei("88888");
-    const _price = toWei("3");
+    const _amount = toWei("99999");
+    const _price = 2;
     const _pair = pairData.pair;
 
     await order.createOrder(_pair, "0", _amount, _price);
-    await order.createOrder(_pair, "0", _amount, toWei("5"));
+    await order.createOrder(_pair, "0", _amount, _price);
     await order.createOrder(_pair, "1", toWei("1111"), _price);
-    await order.createOrder(_pair, "1", toWei("222"), _price);
+    await order.createOrder(_pair, "1", toWei("2222"), _price);
     let orders = await order.getOrders();
 
     console.log(orders);
 
-    const totalOrders = await order.totalOrder();
-    console.log({ totalOrders });
+    // const totalOrders = await order.totalOrder();
+    // console.log({ totalOrders });
+
+    // const buyerCount = await order.buyerCount();
+    // console.log({ buyerCount });
 
     // const data = await order.testStructParam({
     //   owner: owner.address,

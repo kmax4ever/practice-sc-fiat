@@ -357,6 +357,19 @@
         },
         {
             "inputs": [],
+            "name": "count",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
             "name": "createDealId",
             "outputs": [
                 {
@@ -376,6 +389,19 @@
                     "internalType": "uint8",
                     "name": "",
                     "type": "uint8"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "getStatistic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "totalOrder",
+                    "type": "uint256"
                 }
             ],
             "stateMutability": "view",
@@ -427,6 +453,25 @@
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_count",
+                    "type": "uint256"
+                }
+            ],
+            "name": "store",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "symbol",
             "outputs": [
@@ -434,6 +479,19 @@
                     "internalType": "string",
                     "name": "",
                     "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "totalBuyer",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "tota",
+                    "type": "uint256"
                 }
             ],
             "stateMutability": "view",
@@ -506,7 +564,34 @@
             "type": "function"
         }
     ],
-    "Buyer": [],
+    "Buyer": [
+        {
+            "inputs": [],
+            "name": "count",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "totalBuyer",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "tota",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ],
     "Deal": [
         {
             "anonymous": false,
@@ -1114,6 +1199,19 @@
             "type": "function"
         },
         {
+            "inputs": [],
+            "name": "count",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [
                 {
                     "internalType": "bytes32",
@@ -1535,6 +1633,19 @@
             "type": "function"
         },
         {
+            "inputs": [],
+            "name": "getStatistic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "totalOrder",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
             "inputs": [
                 {
                     "internalType": "address",
@@ -1593,6 +1704,25 @@
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_count",
+                    "type": "uint256"
+                }
+            ],
+            "name": "store",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "symbol",
             "outputs": [
@@ -1600,6 +1730,19 @@
                     "internalType": "string",
                     "name": "",
                     "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "totalBuyer",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "tota",
+                    "type": "uint256"
                 }
             ],
             "stateMutability": "view",
@@ -2802,6 +2945,19 @@
             "type": "function"
         },
         {
+            "inputs": [],
+            "name": "buyerCount",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
             "inputs": [
                 {
                     "internalType": "bytes32",
@@ -2811,6 +2967,19 @@
             ],
             "name": "cancelOrder",
             "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "count",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
             "stateMutability": "nonpayable",
             "type": "function"
         },
@@ -3295,6 +3464,19 @@
             "type": "function"
         },
         {
+            "inputs": [],
+            "name": "getStatistic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "totalOrder",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
             "inputs": [
                 {
                     "internalType": "address",
@@ -3358,6 +3540,25 @@
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_count",
+                    "type": "uint256"
+                }
+            ],
+            "name": "store",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "symbol",
             "outputs": [
@@ -3365,6 +3566,75 @@
                     "internalType": "string",
                     "name": "",
                     "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "owner",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "number",
+                            "type": "uint256"
+                        }
+                    ],
+                    "internalType": "struct Order.Test",
+                    "name": "_query",
+                    "type": "tuple"
+                }
+            ],
+            "name": "testStructParam",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "owner",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "number",
+                            "type": "uint256"
+                        }
+                    ],
+                    "internalType": "struct Order.Test",
+                    "name": "result",
+                    "type": "tuple"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "totalBuyer",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "tota",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "totalOrder",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
                 }
             ],
             "stateMutability": "view",
@@ -3484,6 +3754,40 @@
         }
     ],
     "Seller": [],
+    "Statistic": [
+        {
+            "inputs": [],
+            "name": "getStatistic",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "totalOrder",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_count",
+                    "type": "uint256"
+                }
+            ],
+            "name": "store",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ],
     "Struct": [],
     "USDT": [
         {

@@ -40,7 +40,7 @@ contract Event is Struct {
         address buyer,
         uint256 amount0,
         uint256 amount1,
-        uint256 price,
+        int256 price,
         uint256 time
     );
 

@@ -8,7 +8,11 @@ async function main() {
   var CONTRACT = {} as any;
   const deployContract = async (contrName: string) => {
     // const lockedAmount = ethers.utils.parseEther("1");
+    if (contrName === "interface") {
+      return;
+    }
     const contract = await ethers.getContractFactory(contrName);
+
     const contractDeploy = await contract.deploy();
     CONTRACT[contrName] = contractDeploy;
     contractAddress[contrName] = contractDeploy.address;
@@ -28,6 +32,9 @@ async function main() {
 
     for (const file of files) {
       const name = file.split(".")[0];
+      if (name === "interface") {
+        continue;
+      }
       const jsonFile = require(`${jsonDir}/${file}/${name}.json`);
       ABI[name] = jsonFile.abi;
     }

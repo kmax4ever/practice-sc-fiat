@@ -133,6 +133,11 @@ contract Order is Base {
         mapIndexOrder[_orderCount] = _orderId;
 
         IStatistic(address(this)).store(_orderCount);
+
+        if (_orderType == ORDER_TYPE.BUY) {
+            IBuyer(address(this)).count();
+        }
+
         orderCountByType[_orderType]++;
         mapIndexOrderByTypeAndPrice[_orderType][
             countOrderByTypeAndPrice[_orderType][_price]
@@ -457,5 +462,9 @@ contract Order is Base {
 
     function totalOrder() public view returns (uint256) {
         return IStatistic(address(this)).getStatistic();
+    }
+
+    function buyerCount() public view returns (uint256) {
+        return IBuyer(address(this)).totalBuyer();
     }
 }
