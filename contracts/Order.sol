@@ -2,8 +2,10 @@ pragma solidity ^0.8.17;
 
 import "./Base.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Order is Base {
+    using SafeMath for uint256;
     address private _admin;
     mapping(bytes32 => Pair) mapPair;
     uint256 private _orderCount = 0;
@@ -19,6 +21,11 @@ contract Order is Base {
 
     uint256 matchCount;
     mapping(uint256 => MatchOrder) mapMatchOrder;
+
+    struct Test {
+        address owner;
+        uint256 number;
+    }
 
     constructor() {
         _admin = msg.sender;
@@ -124,6 +131,8 @@ contract Order is Base {
 
         bytes32 _orderId = _createOrderId();
         mapIndexOrder[_orderCount] = _orderId;
+
+        IStatistic(address(this)).store(_orderCount);
         orderCountByType[_orderType]++;
         mapIndexOrderByTypeAndPrice[_orderType][
             countOrderByTypeAndPrice[_orderType][_price]
@@ -185,19 +194,17 @@ contract Order is Base {
     function getOrders() public view returns (Order[] memory) {
         Order[] memory orders = new Order[](_orderCount);
         uint32 index = 0;
-        for (uint256 i = 1; i <= _orderCount; i++) {
-            // init i=1 because _orderCount fisrt create _orderCount++ =1
+        for (uint256 i = _orderCount; i >= 1; i--) {
+            // init i=_orderCount because _orderCount++  before mapIndexOrder[_orderCount] , at func _createOrderId
             bytes32 _orderId = mapIndexOrder[i];
-
-            orders[index] = mapOrder[_orderId];
+            Order memory order = mapOrder[_orderId];
+            orders[index] = order;
             index++;
         }
         return orders;
     }
 
-    function getOrdersSort() public view returns(Order [] memory) {
-        
-    }
+    function getOrdersSort() public view returns (Order[] memory) {}
 
     function updateOrder(
         bytes32 _orderId,
@@ -205,11 +212,7 @@ contract Order is Base {
         uint256 _amount
     ) public {}
 
-    function createSellOrder() public {}
-
-    function _createSellOrder() private {}
-
-    function cancelOrder(bytes32 _orderId) public {
+    function cancelOrder(bytes32 _orderId) public onlyOwner(_orderId) {
         _cancelOrder(_orderId);
     }
 
@@ -303,11 +306,15 @@ contract Order is Base {
             uint256 _amount1;
 
             if (isBuyOrder) {
-                uint256 _amount0Exists = currentOrder.amount0Total -
-                    currentOrder.amount0;
-                uint256 _amount1Exists = _orderMatch.amount1Total -
-                    _orderMatch.amount1;
-                uint256 _amount1Need = _amount0Exists * _price;
+                uint256 _amount0Exists = currentOrder.amount0Total.sub(
+                    currentOrder.amount0
+                );
+
+                uint256 _amount1Exists = _orderMatch.amount1Total.sub(
+                    _orderMatch.amount1
+                );
+
+                uint256 _amount1Need = _amount0Exists.mul(_price);
 
                 _amount1 = (_amount1Need > _amount1Exists)
                     ? _amount1Exists
@@ -315,7 +322,7 @@ contract Order is Base {
                     ? _amount1Exists
                     : (_amount1Need);
 
-                _amount0 = _amount1 / _price;
+                _amount0 = _amount1.div(_price);
 
                 console.log("_amount1Need", _amount1Need);
                 console.log("_amount0Exists", _amount0Exists);
@@ -329,17 +336,20 @@ contract Order is Base {
                 console.log("_amount1", _amount1);
 
                 require(
-                    currentOrder.amount0Total - currentOrder.amount0 >=
+                    currentOrder.amount0Total.sub(currentOrder.amount0) >=
                         _amount0,
                     "invalid _amount0"
                 );
             } else {
-                uint256 _amount0Exists = _orderMatch.amount0Total -
-                    _orderMatch.amount0;
-                uint256 _amount1Exists = currentOrder.amount1Total -
-                    currentOrder.amount1;
+                uint256 _amount0Exists = _orderMatch.amount0Total.sub(
+                    _orderMatch.amount0
+                );
 
-                uint256 _amount0Need = _amount1Exists / _price;
+                uint256 _amount1Exists = currentOrder.amount1Total.sub(
+                    currentOrder.amount1
+                );
+
+                uint256 _amount0Need = _amount1Exists.div(_price);
 
                 _amount0 = (_amount0Need > _amount0Exists)
                     ? _amount0Exists
@@ -347,7 +357,7 @@ contract Order is Base {
                     ? _amount0Exists
                     : _amount0Need;
 
-                _amount1 = _amount0 * _price;
+                _amount1 = _amount0.mul(_price);
                 console.log("_amount0Need", _amount0Exists);
                 console.log("_amount0Exists", _amount0Exists);
 
@@ -373,24 +383,24 @@ contract Order is Base {
                 "not enough balance"
             );
 
-            currentOrder.amount0 += _amount0;
-            currentOrder.amount1 += _amount1;
+            currentOrder.amount0 = currentOrder.amount0.add(_amount0);
+            currentOrder.amount1 = currentOrder.amount1.add(_amount1);
             currentOrder.status = ORDER_STATUS.FILL;
 
-            _orderMatch.amount0 += _amount0;
-            _orderMatch.amount1 += _amount1;
+            _orderMatch.amount0 = _orderMatch.amount0.add(_amount0);
+            _orderMatch.amount1 = _orderMatch.amount1.add(_amount1);
             _orderMatch.status = ORDER_STATUS.FILL;
 
             unlock(_orderMatch.token0, msg.sender, _amount0); //transfer buyer
             unlock(_orderMatch.token1, currentOrder.owner, _amount1); //transfer seller
 
-            (bytes32 orderSellId, bytes32 orderBuyId) = isBuyOrder
-                ? (currentOrder.orderId, _orderMatch.orderId)
-                : (_orderMatch.orderId, currentOrder.orderId);
+            // (bytes32 orderSellId, bytes32 orderBuyId) = isBuyOrder
+            //     ? (currentOrder.orderId, _orderMatch.orderId)
+            //     : (_orderMatch.orderId, currentOrder.orderId);
 
-            (address seller, address buyer) = isBuyOrder
-                ? (currentOrder.owner, _orderMatch.owner)
-                : (_orderMatch.owner, currentOrder.owner);
+            // (address seller, address buyer) = isBuyOrder
+            //     ? (currentOrder.owner, _orderMatch.owner)
+            //     : (_orderMatch.owner, currentOrder.owner);
 
             // emit Match(
             //     orderSellId,
@@ -423,39 +433,29 @@ contract Order is Base {
 
     function getMatchs() public view returns (MatchOrder[] memory) {
         MatchOrder[] memory matchs = new MatchOrder[](matchCount);
-        uint256 index;
-
-        for (uint256 i = 0; i < matchCount; i++) {
+        uint256 index = 0;
+        for (uint256 i = matchCount - 1; i >= 0; i--) {
             matchs[index] = mapMatchOrder[i];
             index++;
+            if (i == 0) {
+                break;
+            }
         }
         return matchs;
     }
 
-    // function findMatchOrder(ORDER_TYPE _orderType, uint256 _price)
-    //     public
-    //     view
-    //     returns (Order[] memory)
-    // {
-    //     ORDER_TYPE _findType = _orderType == ORDER_TYPE.BUY
-    //         ? ORDER_TYPE.SELL
-    //         : ORDER_TYPE.BUY;
+    function testStructParam(Test memory _query)
+        public
+        view
+        returns (Test memory result)
+    {
+        result.owner = _query.owner;
+        result.number = _query.number;
 
-    //     Order[] memory orders = new Order[](
-    //         countOrderByTypeAndPrice[_findType][_price]
-    //     );
-    //     uint256 index = 0;
-    //     for (
-    //         uint256 i = 0;
-    //         i < countOrderByTypeAndPrice[_findType][_price];
-    //         i++
-    //     ) {
-    //         bytes32 _orderIdMatch = mapIndexOrderByTypeAndPrice[_findType][i];
-    //         Order memory _orderMatch = mapOrder[_orderIdMatch];
-    //         orders[index] = _orderMatch;
-    //         index++;
-    //     }
+        // return result;
+    }
 
-    //     return orders;
-    // }
+    function totalOrder() public view returns (uint256) {
+        return IStatistic(address(this)).getStatistic();
+    }
 }

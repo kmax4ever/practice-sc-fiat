@@ -251,6 +251,23 @@ const getObjContract = (contract, funcName, params) => {
 };
 
 
+const fromWei = (value) => {
+  try {
+    return ethers.utils.formatUnits(value.toString(), "ether");
+  } catch (error) {
+    console.log(error.mesasge);
+  }
+};
+
+const toWei = (value) => {
+  try {
+    return ethers.utils.parseUnits(value.toString(), "ether");
+  } catch (error) {
+    console.log(error.mesasge);
+  }
+};
+
+
 module.exports = {
   privateKeyToAccount,
   web3Default,
@@ -274,5 +291,7 @@ module.exports = {
   getObjContract,
   getChainId,
   sendFunc,
-  callFunc
+  callFunc,
+  fromWei,
+  toWei
 };

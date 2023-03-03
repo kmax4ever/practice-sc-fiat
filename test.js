@@ -188,13 +188,20 @@ async function start() {
   console.log({ token0Symbol, token1Symbol });
 
   let orders = await callFunc(OrderContract, "getOrders", []);
-  if (orders.length == 0) {
+  // if (orders.length == 0) {
+
+  for (let i = 0; i < 10; i++) {
     await createOrder(pairData, true);
     await createOrder(pairData, false);
   }
 
+  //}
+
   orders = await callFunc(OrderContract, "getOrders", []);
   console.log({ orders });
+
+  const { amount0, price } = orders[0];
+  console.log({ amount0, price });
 
   // const matchOrder = await callFunc(OrderContract, "findMatchOrder", [
   //   "1",

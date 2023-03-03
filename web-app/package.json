@@ -28,6 +28,7 @@
     "react-list": "^0.8.17",
     "react-router": "^6.8.1",
     "react-scripts": "^4.0.3",
+    "react-table": "^7.8.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4",
     "yarn": "^1.22.19"

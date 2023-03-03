@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+import { sign } from "crypto";
 import { ethers } from "hardhat";
 import { fromWei, toWei } from "../utils/utils";
 const BN = require("bn.js");
@@ -25,23 +26,37 @@ describe("Order Contract", function () {
 
     const _orderType = "0";
     const _amount = toWei("88888");
-    const _price = "2";
+    const _price = toWei("3");
     const _pair = pairData.pair;
 
     await order.createOrder(_pair, "0", _amount, _price);
+    await order.createOrder(_pair, "0", _amount, toWei("5"));
     await order.createOrder(_pair, "1", toWei("1111"), _price);
     await order.createOrder(_pair, "1", toWei("222"), _price);
     let orders = await order.getOrders();
-    const _orderId = orders[0].orderId;
-    console.log("xxx orderId", _orderId);
+
+    console.log(orders);
+
+    const totalOrders = await order.totalOrder();
+    console.log({ totalOrders });
+
+    // const data = await order.testStructParam({
+    //   owner: owner.address,
+    //   number: 1,
+    // });
+
+    //  console.log({ data });
+
+    // const _orderId = orders[0].orderId;
+    // console.log("xxx orderId", _orderId);
 
     //await order.cancelOrder(_orderId);
 
     // orders = await order.getOrders();
     // console.log(orders);
 
-    const matchs = await order.getMatchs();
-    console.log({ matchs });
+    // const matchs = await order.getMatchs();
+    // console.log({ matchs });
 
     const [balance1, balance2] = await Promise.all([
       k1Token.balanceOf(order.address),
